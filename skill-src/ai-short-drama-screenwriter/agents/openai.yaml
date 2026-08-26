@@ -1,0 +1,6 @@
+interface:
+  display_name: "AI 短劇編劇"
+  short_description: "以繁體中文完成短劇選題、結構、角色、臺詞、反轉與劇本修改"
+  default_prompt: "使用 $ai-short-drama-screenwriter，將我的故事前提發展成可製作的短劇劇本。"
+policy:
+  allow_implicit_invocation: true

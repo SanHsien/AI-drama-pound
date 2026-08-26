@@ -1,0 +1,16 @@
+# Generated document review artifacts
+.docx-review/
+
+# Local validation dependencies
+.validation-deps/
+
+# Internal development workflow records
+.superpowers/
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# Operating system files
+.DS_Store
+Thumbs.db
