@@ -1,10 +1,23 @@
+<div align="center">
+
 # AI 短劇編劇
 
-> 以繁體中文完成短篇／豎屏短劇的選題、結構、角色、分場、臺詞、衝突、反轉、格式與修改。
+### 以繁體中文完成短篇／豎屏短劇的選題、結構、角色、分場、臺詞、衝突、反轉、格式與修改
 
-[GitHub Release v0.1.0](https://github.com/POUND0423/AI-drama-pound/releases/tag/v0.1.0) · [MIT License](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![CI](https://github.com/SanHsien/AI-drama-pound/actions/workflows/ci.yml/badge.svg)](https://github.com/SanHsien/AI-drama-pound/actions/workflows/ci.yml)
+[![Upstream Release v0.1.0](https://img.shields.io/badge/upstream-v0.1.0-2ea44f.svg)](https://github.com/POUND0423/AI-drama-pound/releases/tag/v0.1.0)
 
-`ai-short-drama-screenwriter` 是一個可供 ChatGPT 桌面版 Codex、Codex CLI 與 IDE extension 使用的 standalone skill。它把故事前提與製作限制整理成可見、可聽、可拍攝，且有明確戲劇推進的短劇內容。
+<p>
+  <a href="README.md"><strong>繁體中文</strong></a> ·
+  <a href="README.en.md">English</a>
+</p>
+
+</div>
+
+> **這是 [`POUND0423/AI-drama-pound`](https://github.com/POUND0423/AI-drama-pound) 的 Windows-first 維護型 fork**，沿用 MIT 與完整 Git 歷史。產品 Skill 跟隨上游；本維護線補上英文入口、Windows 開發／驗收 gate，以及逐筆審查的上游追蹤。差異見 [`FORK.md`](FORK.md)，同步策略見 [`docs/UPSTREAM.md`](docs/UPSTREAM.md)，來源與授權見 [`NOTICE.md`](NOTICE.md)。
+
+`ai-short-drama-screenwriter` 是一個可供 Codex、Claude Code、Cursor 與其他支援 [Agent Skills](https://agentskills.io) 的宿主使用的 standalone skill。它把故事前提與製作限制整理成可見、可聽、可拍攝，且有明確戲劇推進的短劇內容。
 
 ## 專案解決什麼問題
 
@@ -31,17 +44,25 @@
 
 ## 安裝方法
 
+把 `skill-src/ai-short-drama-screenwriter/` **完整複製**到宿主的 skills 目錄。根目錄其餘檔案是本 fork 的開發與治理骨架，不要一起複製進去。
+
+| 宿主 | 建議路徑 |
+| --- | --- |
+| Codex | `~\.agents\skills\ai-short-drama-screenwriter\` |
+| Claude Code | `~\.claude\skills\ai-short-drama-screenwriter\` |
+| Cursor | `~\.cursor\skills\ai-short-drama-screenwriter\` |
+
+每個技能都必須是獨立資料夾，且資料夾內直接包含 `SKILL.md`。詳見 [OpenAI 官方技能文件](https://learn.chatgpt.com/docs/build-skills)。
+
 ### 前置條件
 
 - 已安裝 [Git](https://git-scm.com/)。
-- 已安裝支援 standalone skills 的 ChatGPT 桌面版 Codex、Codex CLI 或 IDE extension。
-
-Codex 的個人技能位置為 `$HOME/.agents/skills`。每個技能都必須是獨立資料夾，且資料夾內直接包含 `SKILL.md`。詳見 [OpenAI 官方技能文件](https://learn.chatgpt.com/docs/build-skills)。
+- 已安裝支援 standalone skills 的 Codex、Claude Code、Cursor 或同等宿主。
 
 ### Windows PowerShell
 
 ```powershell
-git clone --depth 1 https://github.com/POUND0423/AI-drama-pound.git
+git clone --depth 1 https://github.com/SanHsien/AI-drama-pound.git
 
 $repoPath = Join-Path (Get-Location) 'AI-drama-pound'
 $skillPath = Join-Path ([Environment]::GetFolderPath('UserProfile')) '.agents\skills\ai-short-drama-screenwriter'
@@ -52,12 +73,12 @@ Copy-Item -Path (Join-Path $repoPath 'skill-src\ai-short-drama-screenwriter\*') 
 Test-Path (Join-Path $skillPath 'SKILL.md')
 ```
 
-最後一行應輸出 `True`。
+最後一行應輸出 `True`。Cursor 請把 `$skillPath` 改成 `~\.cursor\skills\ai-short-drama-screenwriter`。
 
 ### macOS／Linux
 
 ```bash
-git clone --depth 1 https://github.com/POUND0423/AI-drama-pound.git
+git clone --depth 1 https://github.com/SanHsien/AI-drama-pound.git
 
 mkdir -p "$HOME/.agents/skills/ai-short-drama-screenwriter"
 cp -R "AI-drama-pound/skill-src/ai-short-drama-screenwriter/." \
@@ -67,7 +88,7 @@ test -f "$HOME/.agents/skills/ai-short-drama-screenwriter/SKILL.md" \
   && echo "Skill installed"
 ```
 
-成功時會輸出 `Skill installed`。Codex 通常會自動偵測技能；若沒有出現，請重新啟動 Codex。
+成功時會輸出 `Skill installed`。宿主通常會自動偵測技能；若沒有出現，請重新啟動。
 
 ## 使用方法
 
@@ -154,17 +175,28 @@ test -f "$HOME/.agents/skills/ai-short-drama-screenwriter/SKILL.md" \
 
 ```text
 AI-drama-pound/
-├── skill-src/ai-short-drama-screenwriter/
+├── skill-src/ai-short-drama-screenwriter/   # 產品 skill（以上游為準）
 │   ├── SKILL.md
 │   ├── agents/openai.yaml
 │   └── references/
-│       ├── workflow.md
-│       ├── format.md
-│       └── checklists.md
-├── validation/ai-short-drama-screenwriter/
-├── docs/superpowers/
+├── validation/ai-short-drama-screenwriter/  # 上游定性驗收
+├── docs/superpowers/                        # 上游設計紀錄
+├── AGENTS.md / FORK.md / NOTICE.md          # 本 fork 維護骨架
+├── tools/ / tests/ / .github/               # Windows gate 與 CI
 ├── LICENSE
-└── README.md
+├── README.md
+└── README.en.md
+```
+
+開發與驗收指令見 [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md)。維護者 clone：
+
+```powershell
+git clone https://github.com/SanHsien/AI-drama-pound.git
+cd AI-drama-pound
+python -m venv .venv
+.venv\Scripts\python -m pip install --upgrade pip
+.venv\Scripts\python -m pip install -r requirements-dev.txt
+pwsh -NoProfile -File tools\dev_check.ps1
 ```
 
 ## 驗證狀態
@@ -184,7 +216,7 @@ AI-drama-pound/
 $HOME/.agents/skills/ai-short-drama-screenwriter/SKILL.md
 ```
 
-若路徑正確但技能仍未出現，重新啟動 Codex。
+若路徑正確但技能仍未出現，重新啟動宿主。
 
 ### 可以直接產生分鏡或影片提示詞嗎？
 
@@ -192,4 +224,4 @@ $HOME/.agents/skills/ai-short-drama-screenwriter/SKILL.md
 
 ## 授權
 
-本專案採用 [MIT License](LICENSE)。
+本專案採用 [MIT License](LICENSE)，fork 自 [`POUND0423/AI-drama-pound`](https://github.com/POUND0423/AI-drama-pound)。來源與 attribution 見 [`NOTICE.md`](NOTICE.md)。
