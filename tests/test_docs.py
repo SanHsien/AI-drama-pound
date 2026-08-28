@@ -57,10 +57,12 @@ def test_issue_contact_links_point_at_this_fork() -> None:
 
 
 def test_public_docs_are_traditional_chinese_and_english_only() -> None:
-    assert not (ROOT / "README.ja.md").exists()
+    for name in ("README.ja.md", "README.zh-CN.md", "README.zh.md"):
+        assert not (ROOT / name).exists(), name
     for name in ("README.md", "README.en.md"):
         text = (ROOT / name).read_text(encoding="utf-8")
         assert "README.ja.md" not in text
+        assert "README.zh-CN.md" not in text
 
 
 def test_readme_keeps_credit_without_author_promotion() -> None:
@@ -73,6 +75,9 @@ def test_readme_keeps_credit_without_author_promotion() -> None:
         assert "SanHsien/AI-drama-pound" in text, name
     assert r"~\.agents\skills" in zh
     assert r"~\.cursor\skills" in zh
+    assert "切黑" in zh
+    assert "切黑" in en
+    assert "阿澤" in en
 
 
 def test_bilingual_pairs_cross_link_each_other() -> None:
@@ -119,10 +124,11 @@ def test_gitignore_covers_secrets_and_reports() -> None:
     assert "credentials.json" in text
     assert "/drafts/" in text
     assert "*.fountain" in text
+    assert "*.docx" in text
 
 
 def test_gitignore_actually_ignores_user_secrets_and_drafts() -> None:
-    for name in ("cookies.txt", "credentials.json", "drafts/episode.md"):
+    for name in ("cookies.txt", "credentials.json", "drafts/episode.md", "scene.docx"):
         result = subprocess.run(
             ["git", "check-ignore", "-q", name],
             cwd=ROOT,
@@ -136,8 +142,16 @@ def test_review_md_is_a_risk_snapshot() -> None:
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     assert "Windows-first" in review
     assert "R-01" in review
+    assert "R-02" in review
     assert "風險快照" in agents
     assert "`REVIEW.md`" in agents
+
+
+def test_product_skill_has_no_claude_bang_commands() -> None:
+    text = (
+        ROOT / "skill-src" / "ai-short-drama-screenwriter" / "SKILL.md"
+    ).read_text(encoding="utf-8")
+    assert "!`" not in text
 
 
 def test_tracked_files_are_not_git_symlinks() -> None:

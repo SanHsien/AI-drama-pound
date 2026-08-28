@@ -27,6 +27,7 @@
 | `.github/workflows/upstream-check.yml` | 每週對 `upstream/main` 做未審查 commit 檢查 |
 | `docs/DECISIONS.md`、`docs/UPSTREAM.md`、`docs/DEVELOPMENT.md` | fork 維護文件 |
 | `REVIEW.md` | 風險快照，不是每個一般 bug 的流水帳 |
+| `.gitignore` | 額外擋 cookie／憑證／`/drafts/`／`*.fountain`／`*.docx`，避免誤提交本機劇本 |
 
 產品 `skill-src/`、`validation/`、`docs/superpowers/` 以上游為準，除非有已記錄的 fork 修正。
 

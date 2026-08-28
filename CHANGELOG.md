@@ -15,6 +15,9 @@
 ### 修復
 
 - **`.gitignore` 不擋 cookie／憑證／本機劇本草稿。** 加入 `cookies.txt`、`cookies.json`、`credentials.json`、`/drafts/`、`*.fountain`，並用 `git check-ignore` 測試鎖住。見 [`REVIEW.md`](REVIEW.md) R-01。
+- **英文 README 不是完整鏡像。** `README.en.md` 補上與繁中相同的輸入／輸出節錄與 FAQ。見 R-02。
+- **`.gitignore` 仍漏 Word 稿。** 加入 `*.docx`。見 R-03。
+- **產品 skill 與公開語系契約沒鎖測試。** 禁止 `SKILL.md` 出現 Claude Code `` !`command` ``；公開入口測試改擋 `README.zh-CN.md`／`README.zh.md`。見 R-04、R-05。
 
 ### 新增
 

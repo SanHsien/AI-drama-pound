@@ -16,6 +16,9 @@ adopt/skip reasoning is recorded in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 ### Fixed
 
 - **`.gitignore` did not ignore cookies, credentials, or local screenplay drafts.** Added `cookies.txt`, `cookies.json`, `credentials.json`, `/drafts/`, and `*.fountain`, locked with `git check-ignore` tests. See [`REVIEW.md`](REVIEW.md) R-01.
+- **English README was not a full mirror.** `README.en.md` now includes the same sample I/O excerpt and FAQ as the Chinese file. See R-02.
+- **`.gitignore` still missed Word drafts.** Added `*.docx`. See R-03.
+- **Product-skill and public-locale contracts were untested.** Tests now forbid Claude Code `` !`command` `` in `SKILL.md` and reject `README.zh-CN.md` / `README.zh.md`. See R-04 and R-05.
 
 ### Added
 

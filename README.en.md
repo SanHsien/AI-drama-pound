@@ -110,7 +110,58 @@ Implicit invocation is allowed; whether it fires depends on the request matching
 
 ## Example
 
-See the Traditional Chinese [`README.md`](README.md) for a full sample input and excerpted output. Actual output changes with the premise, constraints, and requested deliverable.
+### Input
+
+```text
+使用 $ai-short-drama-screenwriter，將「外送員替失憶老人送餐，逐漸發現老人是失蹤多年的外公」發展成 8 集都市懸疑短劇。每集 90 秒，主要場景不超過 3 個。請提供必要假設、創作簡報、角色關係、全劇節拍與第一集劇本。
+```
+
+### Excerpted output
+
+The skill's default output is Traditional Chinese. The excerpt below is the same sample as [`README.md`](README.md):
+
+```text
+必要假設
+- 觀眾：偏好都市情感懸疑的短劇觀眾
+- 製作限制：主要場景為外送站、老公寓與主角家
+
+創作簡報
+- 類型：都市溫情懸疑
+- 主角目標：確認老人身分，同時查明家人隱瞞的往事
+- 主要阻力：老人記憶破碎，主角母親阻止他繼續調查
+
+角色關係
+- 阿澤：外送員；從同情老人轉為追查自己的家族秘密
+- 陳伯：失憶老人；保留與阿澤童年有關的零碎記憶
+- 美玲：阿澤母親；知道老人身分，但害怕舊事再次傷害家人
+
+全劇節拍（節錄）
+- 第 1 集：阿澤在老人門口撿到自己童年的照片；母親要求他停止送餐。
+- 第 4 集：老人短暫恢復記憶，叫出阿澤父親的名字。
+- 第 8 集：阿澤確認血緣真相，必須決定公開秘密或保護母親。
+
+第 1 集
+
+1. 內景・老公寓走廊・夜
+
+阿澤提著餐袋停在 302 室門前。門縫下壓著一張泛黃照片。
+
+照片裡，五歲的阿澤坐在一名男子肩上。男子的臉被撕掉一半。
+
+阿澤
+陳伯，您的晚餐到了。
+
+門內傳來老人顫抖的聲音。
+
+陳伯（OS）
+小澤，你終於回來了。
+
+阿澤僵住。他從未告訴老人自己的小名。
+
+切黑。
+```
+
+Actual output changes with the premise, constraints, and requested deliverable. It is not guaranteed to match this excerpt word for word.
 
 ## Boundaries
 
@@ -148,9 +199,26 @@ pwsh -NoProfile -File tools\dev_check.ps1
 
 ## Upstream validation
 
-- [RED baseline](validation/ai-short-drama-screenwriter/baseline-results.md)
-- [GREEN behaviour](validation/ai-short-drama-screenwriter/skill-results.md)
-- [Trigger microtests](validation/ai-short-drama-screenwriter/trigger-microtest-results.md)
+- [RED baseline](validation/ai-short-drama-screenwriter/baseline-results.md): format gaps without the skill
+- [GREEN behaviour](validation/ai-short-drama-screenwriter/skill-results.md): all four scenarios passed
+- [Trigger microtests](validation/ai-short-drama-screenwriter/trigger-microtest-results.md): A–F each 5/5
+- Official skill-structure check: passed
+
+## FAQ
+
+### The skill does not appear after install
+
+Confirm this file exists:
+
+```text
+$HOME/.agents/skills/ai-short-drama-screenwriter/SKILL.md
+```
+
+If the path is correct and the skill still does not appear, restart the host.
+
+### Can it emit storyboards or video prompts?
+
+This skill writes short-drama scripts. If the request also asks for storyboards or video prompts, it finishes the script first, then tries to hand off to an already-installed applicable skill.
 
 ## License
 

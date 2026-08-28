@@ -28,6 +28,7 @@ credentials.json
 # User screenplays — do not commit
 /drafts/
 *.fountain
+*.docx
 
 # Operating system files
 .DS_Store
