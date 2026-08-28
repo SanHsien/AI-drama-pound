@@ -10,6 +10,16 @@
 
 ---
 
+## 2026-08-28（覆核）
+
+### 修復
+
+- **`.gitignore` 不擋 cookie／憑證／本機劇本草稿。** 加入 `cookies.txt`、`cookies.json`、`credentials.json`、`/drafts/`、`*.fountain`，並用 `git check-ignore` 測試鎖住。見 [`REVIEW.md`](REVIEW.md) R-01。
+
+### 新增
+
+- **`REVIEW.md`。** 第一次專案覆核快照，補上 overlay 首推後的 CI／CodeQL URL。
+
 ## 2026-08-28
 
 ### 新增

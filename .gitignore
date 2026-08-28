@@ -21,6 +21,13 @@ venv/
 .env
 .env.*
 !.env.example
+cookies.txt
+cookies.json
+credentials.json
+
+# User screenplays — do not commit
+/drafts/
+*.fountain
 
 # Operating system files
 .DS_Store

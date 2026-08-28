@@ -11,6 +11,16 @@ adopt/skip reasoning is recorded in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ---
 
+## 2026-08-28 (review)
+
+### Fixed
+
+- **`.gitignore` did not ignore cookies, credentials, or local screenplay drafts.** Added `cookies.txt`, `cookies.json`, `credentials.json`, `/drafts/`, and `*.fountain`, locked with `git check-ignore` tests. See [`REVIEW.md`](REVIEW.md) R-01.
+
+### Added
+
+- **`REVIEW.md`.** First project-review snapshot, including CI/CodeQL URLs from the overlay push.
+
 ## 2026-08-28
 
 ### Added

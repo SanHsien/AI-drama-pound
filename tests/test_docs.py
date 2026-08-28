@@ -115,12 +115,27 @@ def test_gitignore_covers_secrets_and_reports() -> None:
     assert ".env" in text
     assert ".venv/" in text
     assert "upstream-review-report.md" in text
+    assert "cookies.txt" in text
+    assert "credentials.json" in text
+    assert "/drafts/" in text
+    assert "*.fountain" in text
+
+
+def test_gitignore_actually_ignores_user_secrets_and_drafts() -> None:
+    for name in ("cookies.txt", "credentials.json", "drafts/episode.md"):
+        result = subprocess.run(
+            ["git", "check-ignore", "-q", name],
+            cwd=ROOT,
+            check=False,
+        )
+        assert result.returncode == 0, name
 
 
 def test_review_md_is_a_risk_snapshot() -> None:
     review = (ROOT / "REVIEW.md").read_text(encoding="utf-8")
     agents = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     assert "Windows-first" in review
+    assert "R-01" in review
     assert "風險快照" in agents
     assert "`REVIEW.md`" in agents
 
