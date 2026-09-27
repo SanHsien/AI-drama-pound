@@ -1,0 +1,47 @@
+# Generated document review artifacts
+.docx-review/
+
+# Local validation dependencies
+.validation-deps/
+
+# Internal development workflow records
+.superpowers/
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Environment variables / secrets
+.env
+.env.*
+!.env.example
+cookies.txt
+cookies.json
+credentials.json
+
+# User screenplays — do not commit
+/drafts/
+*.fountain
+*.docx
+
+# Operating system files
+.DS_Store
+Thumbs.db
+**/.DS_Store
+
+# Editor
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Generated local / CI reports
+upstream-review-report.md
+dependency-freshness-report.md

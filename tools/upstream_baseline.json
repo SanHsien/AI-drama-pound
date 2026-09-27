@@ -1,0 +1,9 @@
+{
+  "repo": "https://github.com/POUND0423/AI-drama-pound.git",
+  "branch": "main",
+  "reviewed_through": "d3724f77466e93ee71778a73498b183eb1dca7bb",
+  "reviewed_date": "2026-08-28",
+  "notes": "Fork overlay established at upstream README + MIT license commit. No product commits adopted beyond the fork point. Subsequent upstream commits, PRs, and issues require review.",
+  "reviewed_pr_through": 0,
+  "reviewed_issue_through": 0
+}
