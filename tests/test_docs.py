@@ -5,6 +5,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 
 import check_links  # noqa: E402
@@ -176,3 +178,43 @@ def test_check_links_rejects_path_outside_repo(tmp_path: Path) -> None:
     doc.write_text("[here](.)\n", encoding="utf-8")
     problems = check_links.check_document(doc)
     assert any("逃出" in item for item in problems)
+
+
+@pytest.fixture
+def link_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    monkeypatch.setattr(check_links, "ROOT", tmp_path.resolve())
+    (tmp_path / "target.md").write_text("# t\n", encoding="utf-8")
+    return tmp_path.resolve()
+
+
+@pytest.mark.parametrize(
+    "link",
+    [
+        '[a](target.md "A title")',
+        "[a](target.md 'A title')",
+        "[a](target.md?plain=1)",
+        "[a](<target.md>)",
+    ],
+)
+def test_check_links_accepts_valid_link_syntax(link_root: Path, link: str) -> None:
+    doc = link_root / "note.md"
+    doc.write_text(link + "\n", encoding="utf-8")
+    assert check_links.check_document(doc) == []
+
+
+def test_check_links_ignores_fenced_code_examples(link_root: Path) -> None:
+    doc = link_root / "note.md"
+    doc.write_text(
+        "```md\n[example](does-not-exist.md)\n```\n\n~~~\n[x](also-missing.md)\n~~~\n",
+        encoding="utf-8",
+    )
+    assert check_links.check_document(doc) == []
+
+
+def test_check_links_still_reports_a_missing_target_with_a_title(
+    link_root: Path,
+) -> None:
+    doc = link_root / "note.md"
+    doc.write_text('[a](missing.md "A title")\n', encoding="utf-8")
+    problems = check_links.check_document(doc)
+    assert len(problems) == 1 and "missing.md" in problems[0]

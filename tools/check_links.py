@@ -19,6 +19,10 @@ ROOT = Path(__file__).resolve().parent.parent
 LINK_PATTERN = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 IMAGE_PATTERN = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
 HTML_SRC_PATTERN = re.compile(r"""(?is)<img[^>]+src=["']([^"']+)["']""")
+FENCE_PATTERN = re.compile(
+    r"^(?P<fence>`{3,}|~{3,})[^\n]*\n.*?(?:^(?P=fence)[`~]*[ \t]*$|\Z)",
+    re.M | re.S,
+)
 SKIP_PREFIXES = ("http://", "https://", "mailto:", "tel:", "#")
 
 SKIP_NAMES = {
@@ -42,10 +46,16 @@ def iter_documents() -> list[Path]:
 
 
 def _missing_relative(path: Path, target: str) -> str | None:
-    target = target.strip().strip("<>")
+    target = target.strip()
+    if target.startswith("<") and ">" in target:
+        # `[a](<path with spaces> "title")`
+        target = target[1 : target.index(">")]
+    else:
+        # `[a](path "title")`: the destination ends at the first whitespace.
+        target = target.split(None, 1)[0] if target else target
     if not target or target.startswith(SKIP_PREFIXES):
         return None
-    file_part = unquote(target.split("#", 1)[0])
+    file_part = unquote(target.split("#", 1)[0].split("?", 1)[0])
     if not file_part:
         return None
     resolved = (path.parent / file_part).resolve()
@@ -62,7 +72,8 @@ def _missing_relative(path: Path, target: str) -> str | None:
 
 def check_document(path: Path) -> list[str]:
     problems: list[str] = []
-    text = path.read_text(encoding="utf-8")
+    # Fenced blocks show example syntax, not links this repo has to satisfy.
+    text = FENCE_PATTERN.sub("", path.read_text(encoding="utf-8"))
     for pattern in (LINK_PATTERN, IMAGE_PATTERN, HTML_SRC_PATTERN):
         for match in pattern.finditer(text):
             missing = _missing_relative(path, match.group(1))
