@@ -16,7 +16,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SKILLS_DIR = ROOT / "skill-src"
 FRONTMATTER_RE = re.compile(r"\A---[ \t]*\r?\n(.*?)^---[ \t]*\r?$", re.M | re.S)
-BLOCK_SCALAR_RE = re.compile(r"^[>|][+-]?\d*$")
+BLOCK_SCALAR_RE = re.compile(r"^[>|](?:[+-]?\d?|\d[+-]?)$")
 NAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$")
 
 
@@ -43,7 +43,8 @@ def field_value(frontmatter: str, name: str) -> str:
     if not match:
         return ""
     value = next(group for group in match.groups() if group is not None).strip()
-    if BLOCK_SCALAR_RE.match(value):
+    unquoted = match.group(3) is not None
+    if unquoted and BLOCK_SCALAR_RE.match(value):
         # `description: >` / `|`: the value is the indented lines that follow.
         folded = value.startswith(">")
         block: list[str] = []

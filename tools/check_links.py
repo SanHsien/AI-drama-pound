@@ -20,7 +20,7 @@ LINK_PATTERN = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 IMAGE_PATTERN = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
 HTML_SRC_PATTERN = re.compile(r"""(?is)<img[^>]+src=["']([^"']+)["']""")
 FENCE_PATTERN = re.compile(
-    r"^(?P<fence>`{3,}|~{3,})[^\n]*\n.*?(?:^(?P=fence)[`~]*[ \t]*$|\Z)",
+    r"^[ ]{0,3}(?P<fence>`{3,}|~{3,})[^\n]*\n.*?(?:^[ ]{0,3}(?P=fence)[`~]*[ \t]*$|\Z)",
     re.M | re.S,
 )
 SKIP_PREFIXES = ("http://", "https://", "mailto:", "tel:", "#")
@@ -45,12 +45,14 @@ def iter_documents() -> list[Path]:
     )
 
 
-def _missing_relative(path: Path, target: str) -> str | None:
+def _missing_relative(
+    path: Path, target: str, markdown: bool = True
+) -> str | None:
     target = target.strip()
     if target.startswith("<") and ">" in target:
         # `[a](<path with spaces> "title")`
         target = target[1 : target.index(">")]
-    else:
+    elif markdown:
         # `[a](path "title")`: the destination ends at the first whitespace.
         target = target.split(None, 1)[0] if target else target
     if not target or target.startswith(SKIP_PREFIXES):
@@ -76,7 +78,9 @@ def check_document(path: Path) -> list[str]:
     text = FENCE_PATTERN.sub("", path.read_text(encoding="utf-8"))
     for pattern in (LINK_PATTERN, IMAGE_PATTERN, HTML_SRC_PATTERN):
         for match in pattern.finditer(text):
-            missing = _missing_relative(path, match.group(1))
+            missing = _missing_relative(
+                path, match.group(1), markdown=pattern is not HTML_SRC_PATTERN
+            )
             if missing:
                 problems.append(missing)
     return problems

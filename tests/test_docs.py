@@ -218,3 +218,27 @@ def test_check_links_still_reports_a_missing_target_with_a_title(
     doc.write_text('[a](missing.md "A title")\n', encoding="utf-8")
     problems = check_links.check_document(doc)
     assert len(problems) == 1 and "missing.md" in problems[0]
+
+
+def test_check_links_indented_closing_fence_does_not_hide_later_links(
+    link_root: Path,
+) -> None:
+    doc = link_root / "note.md"
+    doc.write_text("```\na\n   ```\n[x](missing.md)\n", encoding="utf-8")
+    assert len(check_links.check_document(doc)) == 1
+
+
+def test_check_links_html_src_with_a_space_is_checked_whole(link_root: Path) -> None:
+    (link_root / "my image.png").write_bytes(b"x")
+    doc = link_root / "note.md"
+    doc.write_text('<img src="my image.png">\n', encoding="utf-8")
+    assert check_links.check_document(doc) == []
+
+
+def test_quoted_gt_description_is_a_literal_not_a_block_scalar() -> None:
+    assert validate_skills.field_value("description: '>'\n", "description") == ">"
+
+
+def test_block_scalar_indicator_accepts_either_order() -> None:
+    fm = "description: >2-\n  use when x\n"
+    assert validate_skills.field_value(fm, "description") == "use when x"
