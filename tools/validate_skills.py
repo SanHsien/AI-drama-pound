@@ -15,6 +15,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SKILLS_DIR = ROOT / "skill-src"
+FRONTMATTER_RE = re.compile(r"\A---[ \t]*\r?\n(.*?)^---[ \t]*\r?$", re.M | re.S)
+BLOCK_SCALAR_RE = re.compile(r"^[>|][+-]?\d*$")
 NAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$")
 
 
@@ -27,12 +29,9 @@ def _reconfigure_stdio() -> None:
 
 
 def extract_frontmatter(text: str) -> str | None:
-    if not text.startswith("---"):
-        return None
-    parts = text.split("---", 2)
-    if len(parts) < 3:
-        return None
-    return parts[1]
+    text = text.lstrip("\ufeff")
+    match = FRONTMATTER_RE.match(text)
+    return match.group(1) if match else None
 
 
 def field_value(frontmatter: str, name: str) -> str:
@@ -43,7 +42,18 @@ def field_value(frontmatter: str, name: str) -> str:
     match = pattern.search(frontmatter)
     if not match:
         return ""
-    return next(group for group in match.groups() if group is not None).strip()
+    value = next(group for group in match.groups() if group is not None).strip()
+    if BLOCK_SCALAR_RE.match(value):
+        # `description: >` / `|`: the value is the indented lines that follow.
+        folded = value.startswith(">")
+        block: list[str] = []
+        for line in frontmatter[match.end():].splitlines():
+            if line.strip() and not line[:1].isspace():
+                break
+            block.append(line.strip())
+        lines = [line for line in block if line]
+        return (" " if folded else "\n").join(lines)
+    return value
 
 
 def audit_skill(skill_dir: Path) -> tuple[list[str], list[str]]:
