@@ -114,3 +114,84 @@ def test_report_names_both_exits_so_the_next_person_does_not_invent_a_third() ->
     assert "freshness-hold:" in report
     assert "dependency-deferrals.json" in report
     assert "mute button" in report
+
+
+def test_strict_run_with_no_declared_dependencies_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An empty table renders CHECK FAILED; --strict must not exit 0 on it."""
+    monkeypatch.setattr(checker, "load_direct_dependencies", lambda: [])
+    monkeypatch.setattr(
+        sys, "argv", ["x", "--strict", "--output", str(tmp_path / "report.md")]
+    )
+    assert checker.main() == 1
+
+
+def test_deferral_matches_a_name_spelled_with_underscores(tmp_path: Path) -> None:
+    """PyPI treats `typing_extensions` and `typing-extensions` as one project."""
+    path = tmp_path / "deferrals.json"
+    path.write_text(
+        json.dumps(
+            {
+                "deferrals": {
+                    "Typing-Extensions": {"deferredLatest": "5.0", "reason": "later"}
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+    deferrals = checker.load_deferrals(path)
+    package = {
+        "name": "typing_extensions",
+        "minimum": "4.0",
+        "requirement": "typing_extensions>=4.0",
+        "source": "requirements-dev.txt",
+        "hold": "",
+    }
+    original = checker.fetch_pypi_version
+    checker.fetch_pypi_version = lambda name, timeout=10.0: "5.0"  # type: ignore
+    try:
+        (row,) = checker.collect_status([package], deferrals)
+    finally:
+        checker.fetch_pypi_version = original
+    assert row["deferred_reason"] == "later"
+    assert not checker.needs_review(row)
+
+
+@pytest.mark.parametrize("payload", ["[]", '{"deferrals": []}', '{"deferrals": ["x"]}'])
+def test_malformed_deferrals_file_is_ignored(tmp_path: Path, payload: str) -> None:
+    path = tmp_path / "deferrals.json"
+    path.write_text(payload, encoding="utf-8")
+    assert checker.load_deferrals(path) == {}
+
+
+@pytest.mark.parametrize("body", [b"[]", b'"x"', b"null"])
+def test_unexpected_pypi_payload_shape_reads_as_check_failed(
+    monkeypatch: pytest.MonkeyPatch, body: bytes
+) -> None:
+    class Response:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self):
+            return body
+
+    monkeypatch.setattr(
+        checker.urllib.request, "urlopen", lambda *a, **k: Response()
+    )
+    assert checker.fetch_pypi_version("ruff") is None
+
+
+def test_truncated_pypi_response_reads_as_check_failed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import http.client
+
+    def boom(*args, **kwargs):
+        raise http.client.IncompleteRead(b"{")
+
+    monkeypatch.setattr(checker.urllib.request, "urlopen", boom)
+    assert checker.fetch_pypi_version("ruff") is None

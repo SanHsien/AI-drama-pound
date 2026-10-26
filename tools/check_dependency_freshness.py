@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import http.client
 import os
 import re
 import urllib.parse
@@ -38,6 +39,11 @@ DEFERRALS_PATH = REPO_ROOT / ".github" / "dependency-deferrals.json"
 
 class DependencyCheckError(RuntimeError):
     """Raised when a requirements file cannot be read."""
+
+
+def normalize_name(name: str) -> str:
+    """PEP 503: `Typing_Extensions` and `typing-extensions` are one project."""
+    return re.sub(r"[-_.]+", "-", name).lower()
 
 
 def release_key(version: str) -> tuple[int, ...] | None:
@@ -81,8 +87,11 @@ def load_deferrals(path: Path = DEFERRALS_PATH) -> dict[str, tuple[str, str]]:
     without it is ignored for exactly that reason.
     """
     try:
-        entries = json.loads(path.read_text(encoding="utf-8")).get("deferrals", {})
+        document = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
+        return {}
+    entries = document.get("deferrals") if isinstance(document, dict) else None
+    if not isinstance(entries, dict):
         return {}
     deferrals: dict[str, tuple[str, str]] = {}
     for name, entry in (entries or {}).items():
@@ -91,7 +100,7 @@ def load_deferrals(path: Path = DEFERRALS_PATH) -> dict[str, tuple[str, str]]:
         latest = str(entry.get("deferredLatest", "")).strip()
         reason = str(entry.get("reason", "")).strip()
         if latest and reason:
-            deferrals[name.lower()] = (latest, reason)
+            deferrals[normalize_name(name)] = (latest, reason)
     return deferrals
 
 
@@ -135,7 +144,7 @@ def load_direct_dependencies(root: Path = REPO_ROOT) -> list[dict[str, str]]:
         if not path.is_file():
             raise DependencyCheckError(f"missing requirements file: {name}")
         for package in parse_requirements(path.read_text(encoding="utf-8"), name):
-            key = package["name"].lower().replace("_", "-")
+            key = normalize_name(package["name"])
             if key in seen:
                 continue
             seen.add(key)
@@ -152,9 +161,10 @@ def fetch_pypi_version(package_name: str, timeout: float = 10.0) -> str | None:
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310
             payload = json.loads(response.read().decode("utf-8"))
-    except (OSError, ValueError):
+    except (OSError, ValueError, http.client.HTTPException):
         return None
-    version = payload.get("info", {}).get("version")
+    info = payload.get("info") if isinstance(payload, dict) else None
+    version = info.get("version") if isinstance(info, dict) else None
     return str(version) if version else None
 
 
@@ -167,7 +177,7 @@ def collect_status(
     for package in packages:
         minimum = package["minimum"]
         latest = fetch_pypi_version(package["name"])
-        reviewed, reason = deferrals.get(package["name"].lower(), ("", ""))
+        reviewed, reason = deferrals.get(normalize_name(package["name"]), ("", ""))
         deferred = bool(reviewed and latest and not is_newer_version(latest, reviewed))
         rows.append(
             {
@@ -290,9 +300,9 @@ def main() -> int:
         write_github_output(rows, output_path)
     if error:
         return 2
-    if args.strict and any(
-        needs_review(row) or bool(row["check_failed"])
-        for row in rows
+    if args.strict and (
+        not rows
+        or any(needs_review(row) or bool(row["check_failed"]) for row in rows)
     ):
         return 1
     return 0
