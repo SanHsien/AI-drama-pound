@@ -11,6 +11,17 @@ adopt/skip reasoning is recorded in [`docs/DECISIONS.md`](docs/DECISIONS.md).
 
 ---
 
+## 2026-10-26 (deep scan)
+
+### Fixed
+
+- **The upstream check crashed when `gh` was absent.** It now reports "not checked" and fails closed (exit 2).
+- **`validate_skills.py` false results.** Accepts a UTF-8 BOM, `---` inside a value, and `description: >` block scalars.
+- **Dependency freshness edges.** `--strict` no longer exits 0 with no dependencies; deferrals use PEP 503 name normalisation; malformed JSON / truncated PyPI replies no longer raise.
+- **`check_links.py` false alarms.** Accepts titled links and `?query` suffixes, and skips example links inside fenced code.
+
+---
+
 ## 2026-08-28 (review)
 
 ### Fixed
