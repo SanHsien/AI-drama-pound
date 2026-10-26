@@ -113,3 +113,19 @@ def test_upstream_slug(url, expected):
 def test_shipped_baseline_matches_the_documented_upstream():
     baseline = checker.load_baseline()
     assert checker.upstream_slug(baseline["repo"]) is not None
+
+
+def test_missing_gh_binary_is_reported_not_raised(monkeypatch):
+    """No `gh` on PATH must read as "not checked", not as a traceback."""
+
+    def no_gh(args, **kwargs):
+        raise FileNotFoundError(2, "No such file or directory: 'gh'")
+
+    monkeypatch.setattr(checker.subprocess, "run", no_gh)
+    assert checker.collect_new_tickets(BASELINE, "pr") is None
+
+
+def test_unexpected_gh_json_shape_is_reported_not_raised(monkeypatch):
+    """`gh` answering with a JSON object instead of a list is "not checked"."""
+    monkeypatch.setattr(checker.subprocess, "run", fake_gh({"message": "oops"}))
+    assert checker.collect_new_tickets(BASELINE, "issue") is None
