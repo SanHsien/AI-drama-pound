@@ -92,3 +92,26 @@ def test_audit_reads_folded_description(tmp_path: Path) -> None:
     errors, warnings = validate_skills.audit_skill(skill_dir)
     assert errors == []
     assert warnings == []
+
+
+def test_audit_flags_empty_description_instead_of_reading_next_line(
+    tmp_path: Path,
+) -> None:
+    """`description:` with nothing after it must not swallow the next key."""
+    skill_dir = _skill(
+        tmp_path, "---\ndescription:\nname: demo-skill\n---\n\n# Demo\n"
+    )
+    errors, _warnings = validate_skills.audit_skill(skill_dir)
+    assert "Missing 'description' field in frontmatter" in errors
+
+
+def test_folded_description_with_trailing_comment_reads_the_block() -> None:
+    """`description: > # note` is a folded scalar plus a YAML comment."""
+    fm = "description: > # note\n  Use when x\n  happens.\nname: demo-skill\n"
+    assert validate_skills.field_value(fm, "description") == "Use when x happens."
+
+
+def test_plain_value_drops_trailing_yaml_comment() -> None:
+    assert validate_skills.field_value("name: demo-skill  # dir name\n", "name") == (
+        "demo-skill"
+    )

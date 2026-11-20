@@ -36,7 +36,11 @@ def extract_frontmatter(text: str) -> str | None:
 
 def field_value(frontmatter: str, name: str) -> str:
     pattern = re.compile(
-        rf"^{re.escape(name)}:\s*(?:\"([^\"]*)\"|'([^']*)'|(.*))\s*$",
+        # `[ \t]*`, not `\s*`: under re.M `\s` crosses the newline, so an empty
+        # `description:` would read the next key as its value. A trailing
+        # ` # comment` is YAML, not part of the value.
+        rf"^{re.escape(name)}:[ \t]*(?:\"([^\"]*)\"|'([^']*)'|(.*?))"
+        r"(?:[ \t]+#.*)?[ \t]*$",
         re.M,
     )
     match = pattern.search(frontmatter)
