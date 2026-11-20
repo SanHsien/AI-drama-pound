@@ -242,3 +242,30 @@ def test_quoted_gt_description_is_a_literal_not_a_block_scalar() -> None:
 def test_block_scalar_indicator_accepts_either_order() -> None:
     fm = "description: >2-\n  use when x\n"
     assert validate_skills.field_value(fm, "description") == "use when x"
+
+
+def test_check_links_inline_triple_backtick_span_does_not_hide_later_links(
+    link_root: Path,
+) -> None:
+    """CommonMark: a backtick fence's info string may not contain backticks, so
+    a line starting with ```inline``` is a code span, not a fence opener."""
+    doc = link_root / "note.md"
+    doc.write_text("```inline``` code\n\n[x](missing.md)\n", encoding="utf-8")
+    problems = check_links.check_document(doc)
+    assert len(problems) == 1 and "missing.md" in problems[0]
+
+
+def test_check_links_tilde_fence_info_may_contain_backticks(link_root: Path) -> None:
+    doc = link_root / "note.md"
+    doc.write_text("~~~ a`b\n[x](missing.md)\n~~~\n", encoding="utf-8")
+    assert check_links.check_document(doc) == []
+
+
+def test_check_links_unclosed_fence_fails_the_gate(link_root: Path) -> None:
+    """An unclosed fence hides every later link (CommonMark); the gate must say so
+    instead of silently passing the rest of the file."""
+    doc = link_root / "note.md"
+    doc.write_text("intro\n```\nexample\n\n[x](missing.md)\n", encoding="utf-8")
+    problems = check_links.check_document(doc)
+    assert len(problems) == 1
+    assert "fence" in problems[0] and "2" in problems[0]

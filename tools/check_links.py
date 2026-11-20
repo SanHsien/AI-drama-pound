@@ -19,10 +19,10 @@ ROOT = Path(__file__).resolve().parent.parent
 LINK_PATTERN = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
 IMAGE_PATTERN = re.compile(r"!\[[^\]]*\]\(([^)]+)\)")
 HTML_SRC_PATTERN = re.compile(r"""(?is)<img[^>]+src=["']([^"']+)["']""")
-FENCE_PATTERN = re.compile(
-    r"^[ ]{0,3}(?P<fence>`{3,}|~{3,})[^\n]*\n.*?(?:^[ ]{0,3}(?P=fence)[`~]*[ \t]*$|\Z)",
-    re.M | re.S,
-)
+# CommonMark fence opener: a backtick fence's info string may not contain a
+# backtick, so a line starting with ```inline``` is a code span, not a fence.
+FENCE_OPEN_PATTERN = re.compile(r"^[ ]{0,3}(?:(?P<ticks>`{3,})[^`]*|(?P<tildes>~{3,}).*)$")
+FENCE_CLOSE_PATTERN = re.compile(r"^[ ]{0,3}(`{3,}|~{3,})[ \t]*$")
 SKIP_PREFIXES = ("http://", "https://", "mailto:", "tel:", "#")
 
 SKIP_NAMES = {
@@ -72,10 +72,37 @@ def _missing_relative(
     return f"{target} → 找不到 {shown}"
 
 
+def strip_fences(text: str) -> tuple[str, int | None]:
+    """Drop fenced code blocks; also return the line number of an unclosed fence.
+
+    CommonMark lets an unclosed fence run to the end of the document, so every
+    link after it is hidden. That is valid Markdown but almost always a typo, and
+    it would switch this gate off silently, so the caller reports it.
+    """
+    kept: list[str] = []
+    fence: str | None = None
+    opened_at = 0
+    for number, line in enumerate(text.splitlines(), start=1):
+        if fence is None:
+            match = FENCE_OPEN_PATTERN.match(line)
+            if match:
+                fence = match.group("ticks") or match.group("tildes")
+                opened_at = number
+            else:
+                kept.append(line)
+            continue
+        closer = FENCE_CLOSE_PATTERN.match(line)
+        if closer and closer.group(1)[0] == fence[0] and len(closer.group(1)) >= len(fence):
+            fence = None
+    return "\n".join(kept), (opened_at if fence is not None else None)
+
+
 def check_document(path: Path) -> list[str]:
     problems: list[str] = []
     # Fenced blocks show example syntax, not links this repo has to satisfy.
-    text = FENCE_PATTERN.sub("", path.read_text(encoding="utf-8"))
+    text, unclosed = strip_fences(path.read_text(encoding="utf-8"))
+    if unclosed is not None:
+        problems.append(f"第 {unclosed} 行的 code fence 沒有收尾，之後的連結都不會被檢查")
     for pattern in (LINK_PATTERN, IMAGE_PATTERN, HTML_SRC_PATTERN):
         for match in pattern.finditer(text):
             missing = _missing_relative(
