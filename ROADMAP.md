@@ -20,6 +20,7 @@
 | 引進上游新 commit／PR／issue | `Upstream check` workflow 轉 failure（＝上游有未審項目） | 逐項審完，`tools/upstream_baseline.json` 水位推進；`python tools/check_upstream_updates.py --strict` exit 0；`tools\dev_check.ps1` 綠 | Claude Sonnet | `tools/upstream_baseline.json`；`docs/UPSTREAM.md` |
 | 用真實模型實跑上游 `validation/` 情境，並在 Codex／Claude Code／Cursor 實際安裝觸發八階段流程 | 維護者決定要對外宣稱編劇流程可用，且願意負擔模型 API 費用與 GUI 實機操作 | 每個情境留下輸入、輸出與通過／失敗紀錄，寫入 `REVIEW.md`「尚未宣稱範圍」並更新該段；未實跑的環境維持不宣稱 | 維護者 | `REVIEW.md:98-101` |
 | 取消 pytest 的 `freshness-hold`、升到 pytest 9 | CI 矩陣放棄 Python 3.9（pytest 9 需 Python >=3.10） | `.github/workflows/ci.yml` 矩陣不含 3.9、`requirements-dev.txt` 移除該 hold、CI 全綠、`check_dependency_freshness.py --strict` exit 0 | Codex | `requirements-dev.txt:2`；`.github/workflows/ci.yml:25` |
+| 重審 ruff 的 `freshness-hold`（取消或調高下限） | 任一成立：CI 的 `ruff check` 在最新 ruff 轉紅；ruff 棄用或改變 E9／F 規則或 `--target-version py39`；gate 要加 E9／F 以外的規則 | 新下限在 `tools\dev_check.ps1` 與 CI 全綠；`requirements-dev.txt` 的 hold 理由改寫或移除；`check_dependency_freshness.py --strict` exit 0 | Codex | `requirements-dev.txt:3`；`tools/dev_check.ps1` |
 
 ## 刻意不做
 
