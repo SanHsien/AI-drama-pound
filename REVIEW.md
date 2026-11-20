@@ -1,8 +1,8 @@
 # Repository review（Windows-first）
 
-- Review date: 2026-08-28
-- Review baseline: `258be68885eb3e93291ca2273962cf27a565957b`（overlay 首推）
-- Remediation: `b3069d0` 關 R-01；本輪關 R-02～R-05。不回貢
+- Review date: 2026-08-28（全量）；2026-11-20 增量審查 `a3d0edc..17ac9aa`
+- Review baseline: `258be68885eb3e93291ca2273962cf27a565957b`（overlay 首推）；增量至 `17ac9aa`
+- Remediation: `b3069d0` 關 R-01；R-02～R-05 已修；R-09～R-13 於 2026-11-20 修（`dd3ed81`、`4723aac`、`7f3d256`），R-14 只記錄。不回貢
 - Upstream reviewed through: `d3724f77466e93ee71778a73498b183eb1dca7bb`
 - Upstream watermarks: PR / issue `reviewed_pr_through` / `reviewed_issue_through` = **0**
 - Primary environment: Windows 11、PowerShell、Python 3.14（本機）、CI Ubuntu 3.9–3.14、Windows 3.14
@@ -74,6 +74,11 @@ pwsh -NoProfile -File tools\dev_check.ps1
 | R-03 | P3 | R-01 仍漏 `*.docx`。上游已有 `.docx-review/`，Word 劇本草稿仍可被 `git add`。 | `.gitignore` 加 `*.docx`；`git check-ignore scene.docx` 鎖住。 |
 | R-04 | P3 | AGENTS.md 禁止產品 `SKILL.md` 使用 Claude Code `` !`command` ``，但測試沒鎖。 | `test_product_skill_has_no_claude_bang_commands`。 |
 | R-05 | P3 | 公開入口「只留繁中與英文」只測了 `README.ja.md`，沒擋 `README.zh-CN.md`／`README.zh.md`。 | `test_public_docs_are_traditional_chinese_and_english_only` 擴成三個檔名。 |
+| R-09 | P3 | `check_links.py`：行首 ```` ```inline``` ```` code span 被當成 fence 開頭，之後連結全部不檢查（假綠）。 | `dd3ed81`（2026-11-20）：改成逐行 fence 掃描，依 CommonMark 反引號 fence 的 info string 不可含反引號。`test_check_links_inline_triple_backtick_span_does_not_hide_later_links`、`test_check_links_tilde_fence_info_may_contain_backticks`。 |
+| R-10 | P3 | `check_links.py`：沒收尾的 fence 讓整份文件剩下的連結靜默不檢查。 | `dd3ed81`（2026-11-20）：保留 CommonMark 語意，但回報「第 N 行 code fence 沒有收尾」為 problem，gate 失敗。`test_check_links_unclosed_fence_fails_the_gate`。 |
+| R-11 | P3 | `validate_skills.py`：`description:` 留空時 `\s*` 吃掉換行、讀到下一行，只出 warning（假綠）。 | `4723aac`（2026-11-20）：改 `[ \t]*`，空描述報 Missing error。`test_audit_flags_empty_description_instead_of_reading_next_line`。 |
+| R-12 | P3 | `validate_skills.py`：`description: > # comment` 被當字面值 `'> # comment'`。 | `4723aac`（2026-11-20）：去掉值尾 ` # 註解` 再判斷 block scalar。`test_folded_description_with_trailing_comment_reads_the_block`、`test_plain_value_drops_trailing_yaml_comment`。 |
+| R-13 | P3 | `requirements-dev.txt` ruff `freshness-hold` 沒有重審條件，等於永久靜音。 | `7f3d256`（2026-11-20）：hold 理由寫明重審條件，並在 `ROADMAP.md` 加對應列（與 pytest hold 同做法）。 |
 
 ## 刻意不修
 
@@ -81,6 +86,7 @@ pwsh -NoProfile -File tools\dev_check.ps1
 |---|---|---|---|
 | R-06 | P3 | `check_links.py` 不掃 `skill-src/`、`validation/`、`docs/superpowers/`。 | 那些是上游產品與設計紀錄，每次同步都會變。README 已核對 validation 檔存在；產品 SKILL.md 目前沒有 Markdown 相對連結。把上游文件納入 gate 會讓無關的上游連結打斷本線 CI。 |
 | R-07 | P3 | `LICENSE` 只有 `Copyright (c) 2026 POUND0423`。 | 維持上游原文。fork overlay 的 attribution 在 `NOTICE.md`。改 LICENSE 會把 fork 寫成第二作者原創。 |
+| R-14 | P3 | `tests/test_upstream_updates.py` 刪了 state=all、watermark 不重報等四條性質測試，本 repo CI 不再跑它們。 | `tools/check_upstream_updates.py` 與 `repo-fleet-ops/tools/canonical/check_upstream_updates.py` byte-identical，由 repo-fleet-ops 擁有；這些性質由 canonical 的 `check_upstream_updates_test.py` 釘住。同步時的退化防線屬 repo-fleet-ops 同步流程，本 repo 不改該檔。 |
 | R-08 | P3 | `dev_check.ps1` 不含 Bandit。 | 產品不是 Python 管線。不把 Python 安全工具鏈塞進 Markdown skill repo。CodeQL 已掃 overlay Python。 |
 
 ## 已檢查、不列為 finding
