@@ -79,6 +79,7 @@ pwsh -NoProfile -File tools\dev_check.ps1
 | R-11 | P3 | `validate_skills.py`：`description:` 留空時 `\s*` 吃掉換行、讀到下一行，只出 warning（假綠）。 | `4723aac`（2026-11-20）：改 `[ \t]*`，空描述報 Missing error。`test_audit_flags_empty_description_instead_of_reading_next_line`。 |
 | R-12 | P3 | `validate_skills.py`：`description: > # comment` 被當字面值 `'> # comment'`。 | `4723aac`（2026-11-20）：去掉值尾 ` # 註解` 再判斷 block scalar。`test_folded_description_with_trailing_comment_reads_the_block`、`test_plain_value_drops_trailing_yaml_comment`。 |
 | R-13 | P3 | `requirements-dev.txt` ruff `freshness-hold` 沒有重審條件，等於永久靜音。 | `7f3d256`（2026-11-20）：hold 理由寫明重審條件，並在 `ROADMAP.md` 加對應列（與 pytest hold 同做法）。 |
+| R-15 | P3 | `check_links.py` 逐行掃 fence、不剝 code span：list item 內的 fence 在 item 結束後仍延續（假綠），code span 裡的範例連結誤報；改成剝 code span 時又會出現：孤立反引號跨 blockquote 分段、ATX 標題、HTML 區塊／註解、以標題開頭的 list item 或 GFM 表格儲存格配對；`` \` `` 被當 code span 分隔；縮排 ```` ``` ````、list item 內的 fence、`>` 後接 tab 的 fence 被誤判。 | 已修 `77d5e0d`（2026-11-21）：改用 markdown-it-py 4.2.0（CommonMark＋GFM 表格，精確釘版於 `requirements-dev.txt`，`dev_check` 先安裝）解析，只檢查 link／image token 與 HTML token 內的 `<img src>`；程式碼由 parser 排除。fence 的原始範圍沒結束在收尾行就回報「沒有收尾」。`test_check_links_code_detection_does_not_hide_a_real_link` 的 list item fence 例與 `test_check_links_ignores_code_in_blockquotes_and_spans` 在原版失敗；其餘 10 例原版不剝 code span 本來就通過，留作回歸防線。Python 3.9 改釘 markdown-it-py 3.0.0（4.x 需要 3.10），同一組測試以 3.0.0 實跑通過。真實文件比對：舊版檢查過的目標一個不少，0 斷連結。 |
 
 ## 刻意不修
 
