@@ -228,6 +228,63 @@ def test_check_links_indented_closing_fence_does_not_hide_later_links(
     assert len(check_links.check_document(doc)) == 1
 
 
+# Each text renders [real](gone.md) as a real link in CommonMark (checked with
+# markdown-it-py 4.2.0); a stray backtick or fence-like line must not hide it.
+HIDDEN_LINK_CASES = {
+    "code span crosses a blockquote paragraph break": (
+        "> A stray ` backtick.\n>\n> [real](gone.md)\n>\n> Another ` backtick.\n"
+    ),
+    "escaped backtick opens a code span": (
+        "An escaped \\` backtick, [real](gone.md), then `code`.\n"
+    ),
+    "code span crosses an ATX heading": "# A ` heading\n[real](gone.md) and ` here.\n",
+    "indented backticks open a fence": "Para.\n\n    ```\n[real](gone.md)\n    ```\n",
+    "fence outlives its list item": (
+        "- Step:\n\n  ```sh\n  run\n\n[real](gone.md)\n\n  ```\n"
+    ),
+    "html block interrupts a paragraph": (
+        "A stray ` tick.\n<pre>x</pre>\n[real](gone.md) and ` another.\n"
+    ),
+    "html comment interrupts a paragraph": (
+        "A stray ` tick.\n<!-- note -->\n[real](gone.md) and ` another.\n"
+    ),
+    "list item opens with an ATX heading": (
+        "- # A ` heading\n  [real](gone.md) and ` here.\n"
+    ),
+    "table cells split code spans": (
+        "| a ` b | [real](gone.md) | c ` d |\n|---|---|---|\n"
+    ),
+    "five spaces after a list marker is indented code": (
+        "-     ```\n  [real](gone.md)\n-     code ` x\n"
+    ),
+    "tab after a blockquote marker counts from line start": (
+        ">\t```\n> ` x\n[real](gone.md)\n>\t` x\n"
+    ),
+}
+
+
+@pytest.mark.parametrize("text", HIDDEN_LINK_CASES.values(), ids=HIDDEN_LINK_CASES.keys())
+def test_check_links_code_detection_does_not_hide_a_real_link(
+    link_root: Path, text: str
+) -> None:
+    doc = link_root / "note.md"
+    doc.write_text(text, encoding="utf-8")
+    problems = check_links.check_document(doc)
+
+    assert any("gone.md" in problem for problem in problems)
+
+
+
+def test_check_links_ignores_code_in_blockquotes_and_spans(link_root: Path) -> None:
+    doc = link_root / "note.md"
+    doc.write_text(
+        "> ```\n> [x](fenced.md)\n>\n> ```\n\n"
+        "Use `[y](span.md)` and ``a ` [z](z.md)``.\n",
+        encoding="utf-8",
+    )
+    assert check_links.check_document(doc) == []
+
+
 def test_check_links_html_src_with_a_space_is_checked_whole(link_root: Path) -> None:
     (link_root / "my image.png").write_bytes(b"x")
     doc = link_root / "note.md"

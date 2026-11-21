@@ -32,6 +32,13 @@ function Invoke-PythonStep {
     }
 }
 
+# tools/check_links.py needs the pinned Markdown parser; pip leaves satisfied
+# requirements alone, so this is a no-op once the environment is current.
+Invoke-PythonStep -Label "Install dev requirements" -Arguments @(
+    "-m", "pip", "install", "--quiet", "--disable-pip-version-check",
+    "-r", "requirements-dev.txt"
+)
+
 $pythonTools = @(
     "tools\check_upstream_updates.py",
     "tools\check_dependency_freshness.py",
